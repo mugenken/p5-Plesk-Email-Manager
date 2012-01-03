@@ -1,0 +1,10 @@
+Build.PL
+Changes
+lib/Plesk/Email/Manager.pm
+lib/Plesk/Email/Manager/MakeConfig.pm
+MANIFEST			This list of files
+README
+t/00-load.t
+t/manifest.t
+t/pod-coverage.t
+t/pod.t
