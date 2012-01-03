@@ -4,9 +4,9 @@ use 5.010;
 use warnings;
 
 use lib 'lib';
-use SpamRelease::MakeConfig;
+use Plesk::Email::Manager::MakeConfig;
 
-my $sr = SpamRelease::MakeConfig->new(
+my $sr = Plesk::Email::Manager::MakeConfig->new(
     configfile => 'files/spamrelease.conf',
 );
 
