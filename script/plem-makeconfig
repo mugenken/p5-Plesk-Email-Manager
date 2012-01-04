@@ -6,10 +6,10 @@ use warnings;
 use lib 'lib';
 use Plesk::Email::Manager::MakeConfig;
 
-my $sr = Plesk::Email::Manager::MakeConfig->new(
+my $make_config = Plesk::Email::Manager::MakeConfig->new(
     configfile => 'files/spamrelease.conf',
 );
 
-$sr->_fetch_all;
+$make_config->run;
 
 

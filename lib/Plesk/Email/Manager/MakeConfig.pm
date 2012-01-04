@@ -28,6 +28,17 @@ sub BUILD {
     return 1;
 }
 
+sub run {
+    my ($self) = @_;
+
+    $self->_fetch_all;
+    $self->_process_relay_domains;
+
+    use Data::Dumper;
+    say Dumper $self->relay_domains;
+
+}
+
 sub _get_servers {
     my ($self) = @_;
 
@@ -69,12 +80,15 @@ sub _fetch_all {
         $self->_map_relay_domains($domains, $domains_ips);
     }
 
+    return 1;
+}
+
+sub _process_relay_domains {
+    my ($self) = @_;
+
     $self->_merge_smpt_overrides;
     $self->_add_trandport_to_relay_domains;
     $self->_merge_transport_exceptions;
-
-    use Data::Dumper;
-    say Dumper $self->relay_domains;
 
     return 1;
 }
