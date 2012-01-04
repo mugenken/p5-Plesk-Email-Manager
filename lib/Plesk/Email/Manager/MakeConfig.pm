@@ -4,6 +4,7 @@ use Moo;
 use 5.010;
 use feature 'say';
 use warnings;
+use autodie;
 use Config::Auto;
 use Socket;
 use DBI;
@@ -12,10 +13,6 @@ use DBD::mysql;
 has configfile => ( is => 'rw' );
 has config => ( is => 'rw' );
 has servers => ( is => 'rw' );
-has domain_aliases => ( is => 'rw' );
-has mailboxes => ( is => 'rw' );
-has mail_aliases => ( is => 'rw' );
-has catch_alls => ( is => 'rw' );
 
 has relay_domains => ( is => 'rw' );
 has relay_recipients => ( is => 'rw' );
@@ -32,14 +29,14 @@ sub BUILD {
 sub run {
     my ($self) = @_;
 
-    #$self->_fetch_domains;
-    #$self->_process_relay_domains;
-
+    $self->_fetch_domains;
+    $self->_process_relay_domains;
     $self->_fetch_mailboxes;
 
-    use Data::Dumper;
-    say Dumper $self->relay_recipients;
+    $self->_generate_postfix_config;
+    $self->_postmap_and_reload;
 
+    return 1;
 }
 
 sub _get_servers {
@@ -224,6 +221,34 @@ sub _merge_transport_exceptions {
     }
 
     @{$relay_domains}{keys %{$transport_exceptions}} = values %{$transport_exceptions};
+
+    return 1;
+}
+
+sub _generate_postfix_config {
+    my ($self) = @_;
+
+    my $relay_recipient_maps = 'files/relay_recipient_maps';
+    my $relay_domains = 'files/relay_domains';
+
+    open my $rd_fh, '>', $relay_domains . '.tmp';
+    for (keys %{ $self->relay_domains }){
+        print $rd_fh $_ . "\t" . $self->relay_domains->{$_};
+    }
+    close $rd_fh;
+
+    open my $rrm_fh, '>', $relay_recipient_maps . '.tmp';
+    for (keys %{ $self->relay_recipients }){
+        print $rrm_fh $_ . "\t" . $self->relay_domains->{$_};
+    }
+    close $rrm_fh;
+
+    return 1;
+
+}
+
+sub _postmap_and_reload {
+    say "postmapping and reloading";
 
     return 1;
 }
