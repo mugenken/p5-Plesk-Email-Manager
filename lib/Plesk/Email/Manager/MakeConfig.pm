@@ -53,6 +53,67 @@ sub _get_servers {
     return 1;
 }
 
+sub _fetch_mailboxes {
+    my ($self) = @_;
+
+    my $base_dsn = 'dbi:mysql';
+
+    for my $hostname (keys %{$self->servers}){
+        say "working on $hostname";
+        my $database = $self->servers->{$hostname}->{Db};
+        my $username = $self->servers->{$hostname}->{DbUser};
+        my $password = $self->servers->{$hostname}->{DbPassword};
+        my $port     = 3306;
+
+        my $dsn = "$base_dsn:$database:$hostname:$port";
+        my $dbh = DBI->connect($dsn, $username, $password) or die $!;
+
+        my $mailboxes = $self->_query($dbh, $self->config->{Queries}->{mailboxes});
+        my $aliases   = $self->_query($dbh, $self->config->{Queries}->{mail_aliases});
+        my $catch_alls = $self->_query($dbh, $self->config->{Queries}->{catch_alls});
+
+        $dbh->disconnect;
+
+        # merge aliases with mailboxes
+        push @$mailboxes, $_ for @$aliases;
+
+        $self->_map_relay_recipients($catch_alls, $mailboxes);
+    }
+
+    return 1;
+}
+
+sub _map_relay_recipients {
+    my ($self, $catch_alls, $mailboxes) = @_;
+
+    my $addresses = $self->relay_recipients // {};
+    my @catch_alls = _flatten(@$catch_alls);
+    my @smtp_overrides = keys %{ $self->config->{'Postfix: Domain-Smtp-Overrides'} };
+    my @mailbox_exceptions = keys %{ $self->config->{'Postfix: Mailbox-Exceptions'} };
+
+    for (@{$mailboxes}){
+        my ($user, $domain) = @$_;
+        for (@catch_alls){
+            $user = '' if $domain eq $_;
+        }
+        my $address = $user . '@' . $domain;
+        $addresses->{$address} = 'OK';
+    }
+
+    for (@smtp_overrides){
+        my $domain = '@' . $_;
+        $addresses->{$domain} = 'OK';
+    }
+
+    for (@mailbox_exceptions){
+        $addresses->{$_} = 'OK';
+    }
+
+    $self->relay_recipients($addresses);
+
+    return 1;
+}
+
 sub _fetch_domains {
     my ($self) = @_;
 
@@ -89,36 +150,6 @@ sub _process_relay_domains {
     return 1;
 }
 
-sub _fetch_mailboxes {
-    my ($self) = @_;
-
-    my $base_dsn = 'dbi:mysql';
-
-    for my $hostname (keys %{$self->servers}){
-        say "working on $hostname";
-        my $database = $self->servers->{$hostname}->{Db};
-        my $username = $self->servers->{$hostname}->{DbUser};
-        my $password = $self->servers->{$hostname}->{DbPassword};
-        my $port     = 3306;
-
-        my $dsn = "$base_dsn:$database:$hostname:$port";
-        my $dbh = DBI->connect($dsn, $username, $password) or die $!;
-
-        my $mailboxes = $self->_query($dbh, $self->config->{Queries}->{mailboxes});
-        my $aliases   = $self->_query($dbh, $self->config->{Queries}->{mail_aliases});
-        my $catch_alls = $self->_query($dbh, $self->config->{Queries}->{catch_alls});
-
-        $dbh->disconnect;
-
-        # merge aliases with mailboxes
-        push @$mailboxes, $_ for @$aliases;
-
-        $self->_map_relay_recipients($catch_alls, $mailboxes);
-    }
-
-    return 1;
-}
-
 sub _query {
     my ($self, $dbh, $query) = @_;
 
@@ -143,37 +174,6 @@ sub _map_relay_domains {
     }
 
     $self->relay_domains($domains_resolved);
-
-    return 1;
-}
-
-sub _map_relay_recipients {
-    my ($self, $catch_alls, $mailboxes) = @_;
-
-    my $addresses = $self->relay_recipients // {};
-    my @catch_alls = _flatten(@$catch_alls);
-    my @smtp_overrides = keys %{ $self->config->{'Postfix: Domain-Smtp-Overrides'} };
-    my @mailbox_exceptions = keys %{ $self->config->{'Postfix: Mailbox-Exceptions'} };
-
-    for (@{$mailboxes}){
-        my ($user, $domain) = @$_;
-        for (@catch_alls){
-            $user = '' if $domain eq $_;
-        }
-        my $address = $user . '@' . $domain;
-        $addresses->{$address} = 'OK';
-    }
-
-    for (@smtp_overrides){
-        my $domain = '@' . $_;
-        $addresses->{$domain} = 'OK';
-    }
-
-    for (@mailbox_exceptions){
-        $addresses->{$_} = 'OK';
-    }
-
-    $self->relay_recipients($addresses);
 
     return 1;
 }
@@ -239,7 +239,7 @@ sub _generate_postfix_config {
 
     open my $rrm_fh, '>', $relay_recipient_maps . '.tmp';
     for (keys %{ $self->relay_recipients }){
-        print $rrm_fh $_ . "\t" . $self->relay_domains->{$_};
+        print $rrm_fh $_ . "\t" . $self->relay_recipients->{$_};
     }
     close $rrm_fh;
 
