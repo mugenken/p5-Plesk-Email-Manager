@@ -10,7 +10,7 @@ use Getopt::Long;
 my $configfile = '';
 
 GetOptions(
-    "c|config=s" => $configfile,
+    "c|config=s" => \$configfile,
 );
 
 die "No such file or insufficiant permissions: $configfile" unless -f $configfile;
