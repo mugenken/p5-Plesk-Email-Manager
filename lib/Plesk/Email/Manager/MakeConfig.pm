@@ -107,7 +107,7 @@ sub _flatten {
 
 sub _aref_to_href {
     my ($aref) = @_;
-    die unless ref $aref == 'ARRAY';
+    die unless ref $aref eq 'ARRAY';
 
     my $href = {};
 
