@@ -5,18 +5,19 @@ use 5.010;
 use feature 'say';
 use warnings;
 use Config::Auto;
+use Socket;
 use DBI;
 use DBD::mysql;
 
 has configfile => ( is => 'rw' );
 has config => ( is => 'rw' );
 has servers => ( is => 'rw' );
-has domains => ( is => 'rw' );
 has domain_aliases => ( is => 'rw' );
-has domains_ips => ( is => 'rw' );
 has mailboxes => ( is => 'rw' );
 has mail_aliases => ( is => 'rw' );
 has catch_alls => ( is => 'rw' );
+
+has relay_domains => ( is => 'rw' );
 
 sub BUILD {
     my ($self) = @_;
@@ -46,6 +47,10 @@ sub _fetch_all {
 
     my $base_dsn = 'dbi:mysql';
 
+    my $domains;
+    my $domains_ips;
+    my $domains_resolved;
+
     for my $hostname (keys %{$self->servers}){
         say "working on $hostname";
         my $database = $self->servers->{$hostname}->{Db};
@@ -55,12 +60,16 @@ sub _fetch_all {
 
         my $dsn = "$base_dsn:$database:$hostname:$port";
         my $dbh = DBI->connect($dsn, $username, $password) or die $!;
-        $self->domains($self->_query($dbh, $self->config->{Queries}->{domains}));
-        $self->domains_ips($self->_query($dbh, $self->config->{Queries}->{domains_ips}));
+
+        $domains = $self->_query($dbh, $self->config->{Queries}->{domains});
+        $domains_ips = $self->_query($dbh, $self->config->{Queries}->{domains_ips});
+
         $dbh->disconnect;
+
+        $self->_map_domains($domains, $domains_ips);
+
         use Data::Dumper;
-        say Dumper $self->domains;
-        say Dumper $self->domains_ips;
+        say Dumper $self->relay_domains;
     }
 }
 
@@ -72,4 +81,42 @@ sub _query {
 
     return $sth->fetchall_arrayref;
 }
+
+sub _map_relay_domains {
+    my ($self, $domains, $domains_ips) = @_;
+
+    my $domains_resolved = $self->relay_domains // {};
+    $domains_ips = _aref_to_href($domains_ips);
+
+    for (_flatten(@$domains)){
+        my $packed_ip = gethostbyname($_);
+        if (defined $packed_ip){
+            my $ip_addr = inet_ntoa($packed_ip);
+            $domains_resolved->{$_} = $ip_addr if $domains_ips->{$_} ~~ $ip_addr;
+        }
+    }
+
+    $self->relay_domains($domains_resolved);
+
+    return 1;
+}
+
+sub _flatten {
+    map @$_, @_;
+}
+
+sub _aref_to_href {
+    my ($aref) = @_;
+    die unless ref $aref == 'ARRAY';
+
+    my $href = {};
+
+    for (@$aref){
+        my ($key, $value) = @$_;
+        $href->{$key} = $value;
+    }
+
+    return $href;
+}
+
 
