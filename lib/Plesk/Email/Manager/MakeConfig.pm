@@ -66,7 +66,7 @@ sub _fetch_all {
 
         $dbh->disconnect;
 
-        $self->_map_domains($domains, $domains_ips);
+        $self->_map_relay_domains($domains, $domains_ips);
 
         use Data::Dumper;
         say Dumper $self->relay_domains;
