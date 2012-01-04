@@ -18,6 +18,7 @@ has mail_aliases => ( is => 'rw' );
 has catch_alls => ( is => 'rw' );
 
 has relay_domains => ( is => 'rw' );
+has relay_recipients => ( is => 'rw' );
 
 sub BUILD {
     my ($self) = @_;
@@ -31,11 +32,13 @@ sub BUILD {
 sub run {
     my ($self) = @_;
 
-    $self->_fetch_all;
-    $self->_process_relay_domains;
+    #$self->_fetch_domains;
+    #$self->_process_relay_domains;
+
+    $self->_fetch_mailboxes;
 
     use Data::Dumper;
-    say Dumper $self->relay_domains;
+    say Dumper $self->relay_recipients;
 
 }
 
@@ -53,7 +56,7 @@ sub _get_servers {
     return 1;
 }
 
-sub _fetch_all {
+sub _fetch_domains {
     my ($self) = @_;
 
     my $base_dsn = 'dbi:mysql';
@@ -93,6 +96,32 @@ sub _process_relay_domains {
     return 1;
 }
 
+sub _fetch_mailboxes {
+    my ($self) = @_;
+
+    my $base_dsn = 'dbi:mysql';
+    my $mailboxes;
+
+    for my $hostname (keys %{$self->servers}){
+        say "working on $hostname";
+        my $database = $self->servers->{$hostname}->{Db};
+        my $username = $self->servers->{$hostname}->{DbUser};
+        my $password = $self->servers->{$hostname}->{DbPassword};
+        my $port     = 3306;
+
+        my $dsn = "$base_dsn:$database:$hostname:$port";
+        my $dbh = DBI->connect($dsn, $username, $password) or die $!;
+
+        $mailboxes = $self->_query($dbh, $self->config->{Queries}->{mailboxes});
+
+        $dbh->disconnect;
+
+        $self->_map_relay_recipients($mailboxes);
+    }
+
+    return 1;
+}
+
 sub _query {
     my ($self, $dbh, $query) = @_;
 
@@ -117,6 +146,22 @@ sub _map_relay_domains {
     }
 
     $self->relay_domains($domains_resolved);
+
+    return 1;
+}
+
+sub _map_relay_recipients {
+    my ($self, $mailboxes) = @_;
+
+    my $addresses = $self->relay_recipients // {};
+
+    for (@{$mailboxes}){
+        my ($user, $domain) = @$_;
+        my $address = $user . '@' . $domain;
+        $addresses->{$address} = 'OK';
+    }
+
+    $self->relay_recipients($addresses);
 
     return 1;
 }
