@@ -252,8 +252,9 @@ sub _generate_postfix_config {
 }
 
 sub _postmap_and_reload {
-    say "postmapping and reloading";
-
+    system '/usr/sbin/postmap files/relay_domains';
+    system '/usr/sbin/postmap files/relay_recipient_maps';
+    #system '/etc/init.d/postfix reload';
     return 1;
 }
 
