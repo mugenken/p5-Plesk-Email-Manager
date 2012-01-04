@@ -7,6 +7,7 @@ use warnings;
 use autodie;
 use Config::Auto;
 use Socket;
+use File::Copy;
 use DBI;
 use DBD::mysql;
 
@@ -233,15 +234,18 @@ sub _generate_postfix_config {
 
     open my $rd_fh, '>', $relay_domains . '.tmp';
     for (keys %{ $self->relay_domains }){
-        print $rd_fh $_ . "\t" . $self->relay_domains->{$_};
+        print $rd_fh $_ . "\t" . $self->relay_domains->{$_} . "\n";
     }
     close $rd_fh;
 
     open my $rrm_fh, '>', $relay_recipient_maps . '.tmp';
     for (keys %{ $self->relay_recipients }){
-        print $rrm_fh $_ . "\t" . $self->relay_recipients->{$_};
+        print $rrm_fh $_ . "\t" . $self->relay_recipients->{$_} . "\n";
     }
     close $rrm_fh;
+
+    move($relay_recipient_maps . '.tmp', $relay_recipient_maps);
+    move($relay_domains . '.tmp', $relay_domains);
 
     return 1;
 
