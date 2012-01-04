@@ -144,7 +144,7 @@ sub _merge_transport_exceptions {
 
     # add dummy values
     for (keys %{$transport_exceptions}){
-        my ($transport, $value) = split ':', $_;
+        my ($transport, $value) = split ':', $transport_exceptions->{$_};
         $value = 'dummy' unless defined $value;
         $transport_exceptions->{$_} = $transport . ':' . $value;
     }
