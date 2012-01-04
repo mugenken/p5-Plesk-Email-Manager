@@ -11,7 +11,12 @@ use DBD::mysql;
 has configfile => ( is => 'rw' );
 has config => ( is => 'rw' );
 has servers => ( is => 'rw' );
-has responses => ( is => 'rw' );
+has domains => ( is => 'rw' );
+has domain_aliases => ( is => 'rw' );
+has domains_ips => ( is => 'rw' );
+has mailboxes => ( is => 'rw' );
+has mail_aliases => ( is => 'rw' );
+has catch_alls => ( is => 'rw' );
 
 sub BUILD {
     my ($self) = @_;
@@ -50,93 +55,21 @@ sub _fetch_all {
 
         my $dsn = "$base_dsn:$database:$hostname:$port";
         my $dbh = DBI->connect($dsn, $username, $password) or die $!;
-        $self->_query_domain_aliases($dbh);
-
+        $self->domains($self->_query($dbh, $self->config->{Queries}->{domains}));
+        $self->domains_ips($self->_query($dbh, $self->config->{Queries}->{domains_ips}));
+        $dbh->disconnect;
+        use Data::Dumper;
+        say Dumper $self->domains;
+        say Dumper $self->domains_ips;
     }
 }
 
-sub _query_domains {
-    my ($self, $dbh) = @_;
-    my $query = 'SELECT name FROM domains';
+sub _query {
+    my ($self, $dbh, $query) = @_;
 
     my $sth = $dbh->prepare($query);
     $sth->execute;
 
-    my $ref = $sth->fetchall_arrayref;
-    use Data::Dumper;
-    say Dumper $ref;
-
-    return 1;
+    return $sth->fetchall_arrayref;
 }
-
-sub _query_domain_aliases {
-    my ($self, $dbh) = @_;
-    my $query = 'SELECT da.name, d.name
-                    FROM domainaliases
-                    AS da
-                        INNER JOIN domains
-                            AS d
-                    ON da.dom_id = d.id
-                    WHERE da.mail = "true"';
-
-    my $sth = $dbh->prepare($query);
-    $sth->execute;
-
-    my $ref = $sth->fetchall_arrayref;
-    use Data::Dumper;
-    say Dumper $ref;
-
-    return 1;
-}
-
-sub _query_mailboxes {
-    my ($self, $dbh) = @_;
-    my $query = 'SELECT m.mail_name, d.name
-                     FROM mail
-                        AS m
-                            INNER JOIN domains
-                                AS d
-                     ON m.dom_id = d.id';
-
-    return 1;
-}
-
-sub _query_mail_aliases {
-    my ($self, $dbh) = @_;
-    my $query = 'SELECT ma.alias, d.name
-                    FROM (
-                        mail_aliases
-                        AS ma
-                            INNER JOIN mail
-                                AS m
-                        ON ma.mn_id = m.id
-                    )
-                    INNER JOIN domains
-                        AS d
-                    ON m.dom_id = d.id';
-
-    return 1;
-}
-
-sub _query_catch_alls {
-    my ($self, $dbh) = @_;
-    my $query = 'SELECT d.name
-                    FROM (
-                        domains
-                        AS d
-                            INNER JOIN Parameters
-                                AS p1
-                        ON d.id = p1.id
-                    )
-                    INNER JOIN Parameters
-                        AS p2
-                    ON d.id = p2.id
-                    WHERE p1.parameter = "catch_addr"
-                    AND p2.parameter = "nonexist_mail"
-                    AND p2.value = "catch"';
-
-    return 1;
-}
-
-
 
