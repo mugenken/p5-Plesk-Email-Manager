@@ -2,6 +2,7 @@ package Plesk::Email::Manager::MakeConfig;
 
 use Moo;
 use 5.010;
+use feature 'say';
 use warnings;
 use Config::Auto;
 use DBI;
@@ -49,7 +50,7 @@ sub _fetch_all {
 
         my $dsn = "$base_dsn:$database:$hostname:$port";
         my $dbh = DBI->connect($dsn, $username, $password) or die $!;
-        $self->_query_domains($dbh);
+        $self->_query_domain_aliases($dbh);
 
     }
 }
@@ -57,15 +58,13 @@ sub _fetch_all {
 sub _query_domains {
     my ($self, $dbh) = @_;
     my $query = 'SELECT name FROM domains';
-    my $query_handle = $dbh->prepare($query);
 
-    my $domain_name;
+    my $sth = $dbh->prepare($query);
+    $sth->execute;
 
-    $query_handle->execute;
-    $query_handle->bind_columns(\$domain_name);
-    while ($query_handle->fetch){
-        say $domain_name;
-    }
+    my $ref = $sth->fetchall_arrayref;
+    use Data::Dumper;
+    say Dumper $ref;
 
     return 1;
 }
@@ -79,6 +78,13 @@ sub _query_domain_aliases {
                             AS d
                     ON da.dom_id = d.id
                     WHERE da.mail = "true"';
+
+    my $sth = $dbh->prepare($query);
+    $sth->execute;
+
+    my $ref = $sth->fetchall_arrayref;
+    use Data::Dumper;
+    say Dumper $ref;
 
     return 1;
 }

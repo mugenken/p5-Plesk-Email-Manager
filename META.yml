@@ -1,0 +1,35 @@
+---
+abstract: 'Some code to handle multiple plesk servers with a single mail gateway.'
+author:
+  - 'Mugen Kenichi <mugen.kenichi@uninets.eu>'
+build_requires:
+  Module::Build: 0
+  Test::More: 0
+configure_requires:
+  Module::Build: 0.38
+dynamic_config: 1
+generated_by: 'Module::Build version 0.38, CPAN::Meta::Converter version 2.113640'
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Plesk-Email-Manager
+no_index:
+  directory:
+    - t
+provides:
+  Plesk::Email::Manager:
+    file: Plesk/Email/Manager.pm
+    version: v0.1.0
+  Plesk::Email::Manager::MakeConfig:
+    file: Plesk/Email/Manager/MakeConfig.pm
+    version: v0.1.0
+  Plesk::Email::Manager::Version:
+    file: Plesk/Email/Manager/Version.pm
+    version: v0.1.0
+requires:
+  Moo: 0
+  perl: 5.01
+resources:
+  license: http://dev.perl.org/licenses/
+version: v0.01

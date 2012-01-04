@@ -31,12 +31,16 @@ my $build = Module::Build->new(
 
     requires => {
         'perl' => 5.010,
+        'Config::Auto' => 0,
         'Moo'  => 0,
+        'indirect' => '0',
+        'multidimensional' => '0',
+        'bareword::filehandles' => '0',
     },
 
     script_files => [@script_files],
 
-    add_to_cleanup      => [ 'Plesk-Email-Manager-* Build _build MYMETA.*' ],
+    add_to_cleanup      => [ 'Plesk-Email-Manager-* Build _build MYMETA.* Makefile.PL' ],
     create_makefile_pl  => 'traditional',
 
     meta_add            => {
@@ -66,7 +70,7 @@ my $build = Module::Build->new(
 );
 
 $build->dispatch('build');
-$build->dispatch('test');
+#$build->dispatch('test');
 
 if ($dist) {
     $build->dispatch('distmeta');

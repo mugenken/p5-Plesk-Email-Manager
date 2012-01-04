@@ -1,0 +1,61 @@
+{
+   "abstract" : "Some code to handle multiple plesk servers with a single mail gateway.",
+   "author" : [
+      "Mugen Kenichi <mugen.kenichi@uninets.eu>"
+   ],
+   "dynamic_config" : 1,
+   "generated_by" : "Module::Build version 0.38, CPAN::Meta::Converter version 2.113640",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Plesk-Email-Manager",
+   "no_index" : {
+      "directory" : [
+         "t"
+      ]
+   },
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "Module::Build" : 0,
+            "Test::More" : 0
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "Module::Build" : "0.38"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Moo" : 0,
+            "perl" : "5.01"
+         }
+      }
+   },
+   "provides" : {
+      "Plesk::Email::Manager" : {
+         "file" : "Plesk/Email/Manager.pm",
+         "version" : "v0.1.0"
+      },
+      "Plesk::Email::Manager::MakeConfig" : {
+         "file" : "Plesk/Email/Manager/MakeConfig.pm",
+         "version" : "v0.1.0"
+      },
+      "Plesk::Email::Manager::Version" : {
+         "file" : "Plesk/Email/Manager/Version.pm",
+         "version" : "v0.1.0"
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "license" : [
+         "http://dev.perl.org/licenses/"
+      ]
+   },
+   "version" : "v0.01"
+}
