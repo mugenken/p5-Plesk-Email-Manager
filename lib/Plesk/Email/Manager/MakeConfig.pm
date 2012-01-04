@@ -67,10 +67,14 @@ sub _fetch_all {
         $dbh->disconnect;
 
         $self->_map_relay_domains($domains, $domains_ips);
-
-        use Data::Dumper;
-        say Dumper $self->relay_domains;
     }
+
+    $self->_merge_smpt_overrides;
+
+    use Data::Dumper;
+    say Dumper $self->relay_domains;
+
+    return 1;
 }
 
 sub _query {
@@ -97,6 +101,19 @@ sub _map_relay_domains {
     }
 
     $self->relay_domains($domains_resolved);
+
+    return 1;
+}
+
+sub _merge_smpt_overrides {
+    my ($self) = @_;
+
+    my $relay_domains = $self->relay_domains;
+    my $smtp_overrides = $self->config->{'Postfix: Domain-Smtp-Overrides'};
+
+    @{$relay_domains}{keys %{$smtp_overrides}} = values %{$smtp_overrides};
+
+    $self->relay_domains($relay_domains);
 
     return 1;
 }
