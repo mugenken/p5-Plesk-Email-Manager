@@ -101,6 +101,7 @@ sub _fetch_mailboxes {
 
     my $base_dsn = 'dbi:mysql';
     my $mailboxes;
+    my $aliases;
 
     for my $hostname (keys %{$self->servers}){
         say "working on $hostname";
@@ -113,8 +114,12 @@ sub _fetch_mailboxes {
         my $dbh = DBI->connect($dsn, $username, $password) or die $!;
 
         $mailboxes = $self->_query($dbh, $self->config->{Queries}->{mailboxes});
+        $aliases   = $self->_query($dbh, $self->config->{Queries}->{mail_aliases});
 
         $dbh->disconnect;
+
+        # merge aliases with mailboxes
+        push @$mailboxes, $_ for @$aliases;
 
         $self->_map_relay_recipients($mailboxes);
     }
