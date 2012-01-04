@@ -5,9 +5,18 @@ use warnings;
 
 use lib 'lib';
 use Plesk::Email::Manager::MakeConfig;
+use Getopt::Long;
+
+my $configfile = '';
+
+GetOptions(
+    "c|config=s" => $configfile,
+);
+
+die "No such file or insufficiant permissions: $configfile" unless -f $configfile;
 
 my $make_config = Plesk::Email::Manager::MakeConfig->new(
-    configfile => 'files/spamrelease.conf',
+    configfile => $configfile,
 );
 
 $make_config->run;
