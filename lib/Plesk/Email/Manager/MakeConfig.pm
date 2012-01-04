@@ -70,6 +70,8 @@ sub _fetch_all {
     }
 
     $self->_merge_smpt_overrides;
+    $self->_add_trandport_to_relay_domains;
+    $self->_merge_transport_exceptions;
 
     use Data::Dumper;
     say Dumper $self->relay_domains;
@@ -111,9 +113,43 @@ sub _merge_smpt_overrides {
     my $relay_domains = $self->relay_domains;
     my $smtp_overrides = $self->config->{'Postfix: Domain-Smtp-Overrides'};
 
+    # merge with slice of hashrefs
     @{$relay_domains}{keys %{$smtp_overrides}} = values %{$smtp_overrides};
 
     $self->relay_domains($relay_domains);
+
+    return 1;
+}
+
+sub _add_trandport_to_relay_domains {
+    my ($self) = @_;
+
+    my $relay_domains = $self->relay_domains;
+
+    for (keys %{$relay_domains}){
+        # should be all smtp here. exceptions will be merged later
+        $relay_domains->{$_} = 'smtp:' . $relay_domains->{$_};
+    }
+
+    $self->relay_domains($relay_domains);
+
+    return 1;
+}
+
+sub _merge_transport_exceptions {
+    my ($self) = @_;
+
+    my $relay_domains = $self->relay_domains;
+    my $transport_exceptions = $self->config->{'Postfix: Domain-Exceptions'};
+
+    # add dummy values
+    for (keys %{$transport_exceptions}){
+        my ($transport, $value) = split ':', $_;
+        $value = 'dummy' unless defined $value;
+        $transport_exceptions->{$_} = $transport . ':' . $value;
+    }
+
+    @{$relay_domains}{keys %{$transport_exceptions}} = values %{$transport_exceptions};
 
     return 1;
 }
