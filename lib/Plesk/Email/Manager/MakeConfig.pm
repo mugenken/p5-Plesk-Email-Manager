@@ -155,6 +155,8 @@ sub _map_relay_recipients {
 
     my $addresses = $self->relay_recipients // {};
     my @catch_alls = _flatten(@$catch_alls);
+    my @smtp_overrides = keys %{ $self->config->{'Postfix: Domain-Smtp-Overrides'} };
+    my @mailbox_exceptions = keys %{ $self->config->{'Postfix: Mailbox-Exceptions'} };
 
     for (@{$mailboxes}){
         my ($user, $domain) = @$_;
@@ -163,6 +165,15 @@ sub _map_relay_recipients {
         }
         my $address = $user . '@' . $domain;
         $addresses->{$address} = 'OK';
+    }
+
+    for (@smtp_overrides){
+        my $domain = '@' . $_;
+        $addresses->{$domain} = 'OK';
+    }
+
+    for (@mailbox_exceptions){
+        $addresses->{$_} = 'OK';
     }
 
     $self->relay_recipients($addresses);
