@@ -61,10 +61,6 @@ sub _fetch_domains {
 
     my $base_dsn = 'dbi:mysql';
 
-    my $domains;
-    my $domains_ips;
-    my $domains_resolved;
-
     for my $hostname (keys %{$self->servers}){
         say "working on $hostname";
         my $database = $self->servers->{$hostname}->{Db};
@@ -75,8 +71,8 @@ sub _fetch_domains {
         my $dsn = "$base_dsn:$database:$hostname:$port";
         my $dbh = DBI->connect($dsn, $username, $password) or die $!;
 
-        $domains = $self->_query($dbh, $self->config->{Queries}->{domains});
-        $domains_ips = $self->_query($dbh, $self->config->{Queries}->{domains_ips});
+        my $domains = $self->_query($dbh, $self->config->{Queries}->{domains});
+        my $domains_ips = $self->_query($dbh, $self->config->{Queries}->{domains_ips});
 
         $dbh->disconnect;
 
@@ -100,8 +96,6 @@ sub _fetch_mailboxes {
     my ($self) = @_;
 
     my $base_dsn = 'dbi:mysql';
-    my $mailboxes;
-    my $aliases;
 
     for my $hostname (keys %{$self->servers}){
         say "working on $hostname";
@@ -113,15 +107,16 @@ sub _fetch_mailboxes {
         my $dsn = "$base_dsn:$database:$hostname:$port";
         my $dbh = DBI->connect($dsn, $username, $password) or die $!;
 
-        $mailboxes = $self->_query($dbh, $self->config->{Queries}->{mailboxes});
-        $aliases   = $self->_query($dbh, $self->config->{Queries}->{mail_aliases});
+        my $mailboxes = $self->_query($dbh, $self->config->{Queries}->{mailboxes});
+        my $aliases   = $self->_query($dbh, $self->config->{Queries}->{mail_aliases});
+        my $catch_alls = $self->_query($dbh, $self->config->{Queries}->{catch_alls});
 
         $dbh->disconnect;
 
         # merge aliases with mailboxes
         push @$mailboxes, $_ for @$aliases;
 
-        $self->_map_relay_recipients($mailboxes);
+        $self->_map_relay_recipients($catch_alls, $mailboxes);
     }
 
     return 1;
@@ -156,12 +151,16 @@ sub _map_relay_domains {
 }
 
 sub _map_relay_recipients {
-    my ($self, $mailboxes) = @_;
+    my ($self, $catch_alls, $mailboxes) = @_;
 
     my $addresses = $self->relay_recipients // {};
+    my @catch_alls = _flatten(@$catch_alls);
 
     for (@{$mailboxes}){
         my ($user, $domain) = @$_;
+        for (@catch_alls){
+            $user = '' if $domain eq $_;
+        }
         my $address = $user . '@' . $domain;
         $addresses->{$address} = 'OK';
     }
