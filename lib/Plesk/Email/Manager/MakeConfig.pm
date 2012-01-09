@@ -15,6 +15,7 @@ has config => ( is => 'rw' );
 has servers => ( is => 'rw' );
 has domain_structure => ( is => 'rw' );
 
+has relay_aliases => ( is => 'rw' );
 has relay_domains => ( is => 'rw' );
 has relay_recipients => ( is => 'rw' );
 
@@ -80,6 +81,7 @@ sub _fetch_mailboxes {
         push @$mailboxes, $_ for @$aliases;
 
         $self->_map_relay_recipients($catch_alls, $mailboxes);
+        $self->_map_mailboxes_to_alias_domains;
     }
 
     return 1;
@@ -138,11 +140,12 @@ sub _fetch_domains {
         my $dbh = DBI->connect($dsn, $username, $password) or die $!;
 
         my $domains = $self->_query($dbh, $self->config->{Queries}->{domains});
+        my $domain_aliases = $self->_query($dbh, $self->config->{Queries}->{domain_aliases});
         my $domains_ips = $self->_query($dbh, $self->config->{Queries}->{domains_ips});
 
         $dbh->disconnect;
 
-        $self->_map_relay_domains($domains, $domains_ips);
+        $self->_map_relay_domains($domains, $domain_aliases, $domains_ips);
     }
 
     return 1;
@@ -168,10 +171,13 @@ sub _query {
 }
 
 sub _map_relay_domains {
-    my ($self, $domains, $domains_ips) = @_;
+    my ($self, $domains, $domain_aliases, $domains_ips) = @_;
 
     my $domains_resolved = $self->relay_domains // {};
+    my $aliases_resolved = $self->relay_aliases // {};
     $domains_ips = _aref_to_href($domains_ips);
+
+    $self->_map_aliases_to_domains($domain_aliases);
 
     for (_flatten(@$domains)){
         my $packed_ip = gethostbyname($_);
@@ -184,6 +190,33 @@ sub _map_relay_domains {
     $self->relay_domains($domains_resolved);
 
     return 1;
+}
+
+sub _map_mailboxes_to_alias_domains {
+    my ($self) = @_;
+
+    my $domain_structure = $self->domain_structure;
+
+
+    return 1;
+}
+
+sub _map_aliases_to_domains {
+    my ($self, $domain_aliases) = @_;
+
+    my $alias_href = {};
+
+    for ($domain_aliases){
+        my ($alias, $domain) = @$_;
+        $alias_href->{$domain} = [] unless defined $alias_href->{$domain};
+        push @{$alias_href->{$domain}}, $alias;
+    }
+
+    use Data::Dumper;
+    use feature 'say';
+    say Dumper $alias_href;
+
+    return $alias_href;
 }
 
 sub _merge_smpt_overrides {
@@ -272,7 +305,7 @@ sub _postmap_and_reload {
 
     system "postmap $relay_domains";
     system "postmap $relay_recipient_maps";
-    system '/etc/init.d/postfix reload';
+    #system '/etc/init.d/postfix reload';
 
     return 1;
 }
