@@ -10,10 +10,12 @@ use Socket;
 use File::Copy;
 use DBI;
 use DBD::mysql;
+use Python::Serialise::Pickle;
 
 has configfile => ( is => 'rw' );
 has config => ( is => 'rw' );
 has servers => ( is => 'rw' );
+has domain_structure => ( is => 'rw' );
 
 has relay_domains => ( is => 'rw' );
 has relay_recipients => ( is => 'rw' );
@@ -205,6 +207,14 @@ sub _add_trandport_to_relay_domains {
 
     $self->relay_domains($relay_domains);
 
+    my %domain_structure;
+    for (keys %{$self->relay_domains}){
+        $domain_structure{$_} = {
+            CatchAll => 0,
+            MailBoxes => [],
+        };
+    }
+
     return 1;
 }
 
@@ -255,6 +265,16 @@ sub _postmap_and_reload {
     system '/usr/sbin/postmap files/relay_domains';
     system '/usr/sbin/postmap files/relay_recipient_maps';
     #system '/etc/init.d/postfix reload';
+    return 1;
+}
+
+sub _generate_pickle_file {
+    my ($self) = @_;
+
+    my $file = $self->config->{PickleFile};
+    my $pkl = Python::Serialise::Pickle->new('>' . $file);
+    $pkl->dump($self->domain_structure);
+
     return 1;
 }
 
