@@ -81,7 +81,7 @@ sub _fetch_mailboxes {
         push @$mailboxes, $_ for @$aliases;
 
         $self->_map_relay_recipients($catch_alls, $mailboxes);
-        $self->_map_mailboxes_to_alias_domains;
+        $self->_merge_alias_map;
     }
 
     return 1;
@@ -167,7 +167,7 @@ sub _fetch_domains {
         $dbh->disconnect;
 
         $self->_map_relay_domains($domains, $domains_ips);
-        $self->_map_relay_aliases($domain_aliases);
+        $self->_map_aliases_to_domains($domain_aliases);
     }
 
     return 1;
@@ -208,15 +208,6 @@ sub _map_relay_domains {
     }
 
     $self->relay_domains($domains_resolved);
-
-    return 1;
-}
-
-sub _map_mailboxes_to_alias_domains {
-    my ($self) = @_;
-
-    my $domain_structure = $self->domain_structure;
-
 
     return 1;
 }
