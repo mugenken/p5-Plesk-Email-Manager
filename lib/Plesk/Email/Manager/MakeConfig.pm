@@ -281,7 +281,13 @@ sub _generate_pickle_file {
 }
 
 sub _in_domain_list {
-    return 1;
+    my ($self, $domain) = @_;
+
+    for (keys %{ $self->relay_domains }){
+        return 1 if $domain eq $_;
+    }
+
+    return 0;
 }
 
 sub _flatten {
