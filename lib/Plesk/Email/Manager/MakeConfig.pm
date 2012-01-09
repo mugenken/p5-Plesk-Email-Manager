@@ -22,6 +22,7 @@ sub BUILD {
     my ($self) = @_;
 
     $self->config(Config::Auto::parse($self->configfile));
+    die "No Servers." unless $self->config->{Servers};
     $self->_get_servers;
 
     return 1;
