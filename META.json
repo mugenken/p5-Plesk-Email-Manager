@@ -32,7 +32,14 @@
       },
       "runtime" : {
          "requires" : {
+            "Config::Auto" : 0,
+            "DBD::mysql" : 0,
+            "DBI" : 0,
             "Moo" : 0,
+            "Python::Serialise::Pickle" : 0,
+            "bareword::filehandles" : 0,
+            "indirect" : 0,
+            "multidimensional" : 0,
             "perl" : "5.01"
          }
       }
@@ -40,15 +47,15 @@
    "provides" : {
       "Plesk::Email::Manager" : {
          "file" : "Plesk/Email/Manager.pm",
-         "version" : "v0.1.0"
+         "version" : "v0.2.0"
       },
       "Plesk::Email::Manager::MakeConfig" : {
          "file" : "Plesk/Email/Manager/MakeConfig.pm",
-         "version" : "v0.1.0"
+         "version" : "v0.2.0"
       },
       "Plesk::Email::Manager::Version" : {
          "file" : "Plesk/Email/Manager/Version.pm",
-         "version" : "v0.1.0"
+         "version" : "v0.2.0"
       }
    },
    "release_status" : "stable",
@@ -57,5 +64,5 @@
          "http://dev.perl.org/licenses/"
       ]
    },
-   "version" : "v0.01"
+   "version" : "v0.02"
 }

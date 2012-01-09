@@ -20,13 +20,13 @@ GetOptions(
 my $build = Module::Build->new(
     module_name         => 'Plesk::Email::Manager',
     license             => 'perl',
-    dist_author         => q{Mugen Kenichi <mugen.kenichi@uninets.eu>},
+    dist_author         => 'Mugen Kenichi <mugen.kenichi@uninets.eu>',
     dist_abstract       => 'Some code to handle multiple plesk servers with a single mail gateway.',
     dist_version_from   => 'lib/Plesk/Email/Manager/Version.pm',
 
     build_requires => {
         'Test::More' => 0,
-        'Module::Build' => '0',
+        'Module::Build' => 0,
     },
 
     requires => {
@@ -35,9 +35,10 @@ my $build = Module::Build->new(
         'Moo'  => 0,
         'DBI' => 0,
         'DBD::mysql' => 0,
-        'indirect' => '0',
-        'multidimensional' => '0',
-        'bareword::filehandles' => '0',
+        'indirect' => 0,
+        'multidimensional' => 0,
+        'bareword::filehandles' => 0,
+        'Python::Serialise::Pickle' => 0,
     },
 
     script_files => [@script_files],
