@@ -242,8 +242,8 @@ sub _merge_transport_exceptions {
 sub _generate_postfix_config {
     my ($self) = @_;
 
-    my $relay_recipient_maps = 'files/relay_recipient_maps';
-    my $relay_domains = 'files/relay_domains';
+    my $relay_domains = $self->config->{ConfigFiles}->{relay_domains};
+    my $relay_recipient_maps = $self->config->{ConfigFiles}->{relay_recipient_maps};
 
     open my $rd_fh, '>', $relay_domains . '.tmp';
     for (keys %{ $self->relay_domains }){
@@ -265,16 +265,22 @@ sub _generate_postfix_config {
 }
 
 sub _postmap_and_reload {
-    system '/usr/sbin/postmap files/relay_domains';
-    system '/usr/sbin/postmap files/relay_recipient_maps';
+    my ($self) = @_;
+
+    my $relay_domains = $self->config->{ConfigFiles}->{relay_domains};
+    my $relay_recipient_maps = $self->config->{ConfigFiles}->{relay_recipient_maps};
+
+    system "postmap $relay_domains";
+    system "postmap $relay_recipient_maps";
     #system '/etc/init.d/postfix reload';
+
     return 1;
 }
 
 sub _generate_pickle_file {
     my ($self) = @_;
 
-    my $file = $self->config->{PickleFile}->{file};
+    my $file = $self->config->{ConfigFiles}->{pickle_file};
     my $pkl = Python::Serialise::Pickle->new('>' . $file);
     $pkl->dump($self->domain_structure);
 
