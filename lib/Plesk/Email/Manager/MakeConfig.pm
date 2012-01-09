@@ -268,7 +268,7 @@ sub _postmap_and_reload {
 sub _generate_pickle_file {
     my ($self) = @_;
 
-    my $file = $self->config->{PickleFile};
+    my $file = $self->config->{PickleFile}->{file};
     my $pkl = Python::Serialise::Pickle->new('>' . $file);
     $pkl->dump($self->domain_structure);
 

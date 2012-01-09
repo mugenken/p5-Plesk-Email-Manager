@@ -3,7 +3,6 @@
 use 5.010;
 use warnings;
 
-use lib 'lib';
 use Plesk::Email::Manager::MakeConfig;
 use Getopt::Long;
 
