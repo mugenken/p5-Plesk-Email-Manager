@@ -47,15 +47,15 @@
    "provides" : {
       "Plesk::Email::Manager" : {
          "file" : "Plesk/Email/Manager.pm",
-         "version" : "v0.2.0"
+         "version" : "v0.3.0"
       },
       "Plesk::Email::Manager::MakeConfig" : {
          "file" : "Plesk/Email/Manager/MakeConfig.pm",
-         "version" : "v0.2.0"
+         "version" : "v0.3.0"
       },
       "Plesk::Email::Manager::Version" : {
          "file" : "Plesk/Email/Manager/Version.pm",
-         "version" : "v0.2.0"
+         "version" : "v0.3.0"
       }
    },
    "release_status" : "stable",
@@ -64,5 +64,5 @@
          "http://dev.perl.org/licenses/"
       ]
    },
-   "version" : "v0.02"
+   "version" : "v0.03"
 }

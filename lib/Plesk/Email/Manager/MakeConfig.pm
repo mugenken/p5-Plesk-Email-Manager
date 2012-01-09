@@ -272,7 +272,7 @@ sub _postmap_and_reload {
 
     system "postmap $relay_domains";
     system "postmap $relay_recipient_maps";
-    #system '/etc/init.d/postfix reload';
+    system '/etc/init.d/postfix reload';
 
     return 1;
 }
