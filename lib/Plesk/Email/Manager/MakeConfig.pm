@@ -11,6 +11,7 @@ use File::Copy;
 use DBI;
 use DBD::mysql;
 use Python::Serialise::Pickle;
+use Data::Dumper;
 
 has configfile => ( is => 'rw' );
 has config => ( is => 'rw' );
@@ -38,6 +39,7 @@ sub run {
 
     $self->_generate_postfix_config;
     $self->_postmap_and_reload;
+    $self->_generate_pickle_file;
 
     return 1;
 }
@@ -52,6 +54,8 @@ sub _get_servers {
     }
 
     $self->servers({%servers});
+
+    say Dumper $self->servers;
 
     return 1;
 }
@@ -79,6 +83,8 @@ sub _fetch_mailboxes {
 
         # merge aliases with mailboxes
         push @$mailboxes, $_ for @$aliases;
+
+        say Dumper $mailboxes;
 
         $self->_map_relay_recipients($catch_alls, $mailboxes);
     }
@@ -111,6 +117,8 @@ sub _map_relay_recipients {
     for (@mailbox_exceptions){
         $addresses->{$_} = 'OK';
     }
+
+    say Dumper $addresses;
 
     $self->relay_recipients($addresses);
 
@@ -177,6 +185,8 @@ sub _map_relay_domains {
     }
 
     $self->relay_domains($domains_resolved);
+
+    say Dumper $self->relay_domains;
 
     return 1;
 }
