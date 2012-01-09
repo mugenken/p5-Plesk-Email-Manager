@@ -145,7 +145,14 @@ sub _fetch_domains {
 
         $dbh->disconnect;
 
-        $self->_map_relay_domains($domains, $domain_aliases, $domains_ips);
+        $self->_map_relay_domains($domains, $domains_ips);
+        $self->_map_relay_aliases($domain_aliases);
+
+
+        use Data::Dumper;
+        use feature 'say';
+        say Dumper $self->relay_aliases;
+
     }
 
     return 1;
@@ -171,13 +178,11 @@ sub _query {
 }
 
 sub _map_relay_domains {
-    my ($self, $domains, $domain_aliases, $domains_ips) = @_;
+    my ($self, $domains, $domains_ips) = @_;
 
     my $domains_resolved = $self->relay_domains // {};
-    my $aliases_resolved = $self->relay_aliases // {};
-    $domains_ips = _aref_to_href($domains_ips);
 
-    $self->_map_aliases_to_domains($domain_aliases);
+    $domains_ips = _aref_to_href($domains_ips);
 
     for (_flatten(@$domains)){
         my $packed_ip = gethostbyname($_);
@@ -201,22 +206,32 @@ sub _map_mailboxes_to_alias_domains {
     return 1;
 }
 
-sub _map_aliases_to_domains {
+sub _map_relay_aliases {
     my ($self, $domain_aliases) = @_;
 
-    my $alias_href = {};
+    my $alias_href = $self->relay_aliases // {};
+    my $relay_domains = $self->relay_domains;
 
-    for ($domain_aliases){
+    for (@$domain_aliases){
         my ($alias, $domain) = @$_;
-        $alias_href->{$domain} = [] unless defined $alias_href->{$domain};
-        push @{$alias_href->{$domain}}, $alias;
+        next unless $self->_in_domain_list($domain);
+
+        # only aliases that resolv correctly
+        my $packed_ip = gethostbyname($alias);
+        if (defined $packed_ip){
+            $alias_href->{$domain} = [] unless defined $alias_href->{$domain};
+            push @{$alias_href->{$domain}}, $alias;
+
+            my $ip_addr = inet_ntoa($packed_ip);
+            $relay_domains->{$alias} = $ip_addr if $relay_domains->{$domain} ~~ $ip_addr;
+        }
+
+        $self->relay_domains($relay_domains);
     }
 
-    use Data::Dumper;
-    use feature 'say';
-    say Dumper $alias_href;
+    $self->relay_aliases($alias_href);
 
-    return $alias_href;
+    return 1;
 }
 
 sub _merge_smpt_overrides {
