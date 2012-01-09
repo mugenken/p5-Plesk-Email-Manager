@@ -2,16 +2,13 @@ package Plesk::Email::Manager::MakeConfig;
 
 use Moo;
 use 5.010;
-use feature 'say';
 use warnings;
 use autodie;
 use Config::Auto;
 use Socket;
 use File::Copy;
 use DBI;
-use DBD::mysql;
 use Python::Serialise::Pickle;
-use Data::Dumper;
 
 has configfile => ( is => 'rw' );
 has config => ( is => 'rw' );
@@ -55,9 +52,6 @@ sub _get_servers {
 
     $self->servers({%servers});
 
-    say 'Servers';
-    say Dumper $self->servers;
-
     return 1;
 }
 
@@ -67,7 +61,6 @@ sub _fetch_mailboxes {
     my $base_dsn = 'dbi:mysql';
 
     for my $hostname (keys %{$self->servers}){
-        say "working on $hostname";
         my $database = $self->servers->{$hostname}->{Db};
         my $username = $self->servers->{$hostname}->{DbUser};
         my $password = $self->servers->{$hostname}->{DbPassword};
@@ -84,9 +77,6 @@ sub _fetch_mailboxes {
 
         # merge aliases with mailboxes
         push @$mailboxes, $_ for @$aliases;
-
-        say 'Mailboxes';
-        say Dumper $mailboxes;
 
         $self->_map_relay_recipients($catch_alls, $mailboxes);
     }
@@ -120,9 +110,6 @@ sub _map_relay_recipients {
         $addresses->{$_} = 'OK';
     }
 
-    say 'Addresses';
-    say Dumper $addresses;
-
     $self->relay_recipients($addresses);
 
     return 1;
@@ -134,7 +121,6 @@ sub _fetch_domains {
     my $base_dsn = 'dbi:mysql';
 
     for my $hostname (keys %{$self->servers}){
-        say "working on $hostname";
         my $database = $self->servers->{$hostname}->{Db};
         my $username = $self->servers->{$hostname}->{DbUser};
         my $password = $self->servers->{$hostname}->{DbPassword};
@@ -188,9 +174,6 @@ sub _map_relay_domains {
     }
 
     $self->relay_domains($domains_resolved);
-
-    say 'Relay domains';
-    say Dumper $self->relay_domains;
 
     return 1;
 }
