@@ -280,6 +280,10 @@ sub _generate_pickle_file {
     return 1;
 }
 
+sub _in_domain_list {
+    return 1;
+}
+
 sub _flatten {
     map @$_, @_;
 }
