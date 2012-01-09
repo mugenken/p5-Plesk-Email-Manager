@@ -15,7 +15,7 @@ has config => ( is => 'rw' );
 has servers => ( is => 'rw' );
 has domain_structure => ( is => 'rw' );
 
-has relay_aliases => ( is => 'rw' );
+has alias_map => ( is => 'rw' );
 has relay_domains => ( is => 'rw' );
 has relay_recipients => ( is => 'rw' );
 
@@ -125,6 +125,27 @@ sub _map_relay_recipients {
     return 1;
 }
 
+sub _merge_alias_map {
+    my ($self) = @_;
+
+    my $alias_map = $self->alias_map;
+    my $domain_structure = $self->domain_structure;
+    my $relay_recipients = $self->relay_recipients;
+
+    for my $domain (keys %$alias_map){
+        for my $alias (@{$alias_map->{$domain}}){
+            for my $mailbox (@{$domain_structure->{$domain}->{MailBoxes}}){
+                my $address = $mailbox . '@' . $alias;
+                $relay_recipients->{$address} = 'OK';
+            }
+        }
+    }
+
+    $self->relay_recipients($relay_recipients);
+
+    return 1;
+}
+
 sub _fetch_domains {
     my ($self) = @_;
 
@@ -147,12 +168,6 @@ sub _fetch_domains {
 
         $self->_map_relay_domains($domains, $domains_ips);
         $self->_map_relay_aliases($domain_aliases);
-
-
-        use Data::Dumper;
-        use feature 'say';
-        say Dumper $self->relay_aliases;
-
     }
 
     return 1;
@@ -206,10 +221,10 @@ sub _map_mailboxes_to_alias_domains {
     return 1;
 }
 
-sub _map_relay_aliases {
+sub _map_aliases_to_domains {
     my ($self, $domain_aliases) = @_;
 
-    my $alias_href = $self->relay_aliases // {};
+    my $alias_map = $self->alias_map // {};
     my $relay_domains = $self->relay_domains;
 
     for (@$domain_aliases){
@@ -219,17 +234,19 @@ sub _map_relay_aliases {
         # only aliases that resolv correctly
         my $packed_ip = gethostbyname($alias);
         if (defined $packed_ip){
-            $alias_href->{$domain} = [] unless defined $alias_href->{$domain};
-            push @{$alias_href->{$domain}}, $alias;
-
+            $alias_map->{$domain} = [] unless defined $alias_map->{$domain};
             my $ip_addr = inet_ntoa($packed_ip);
-            $relay_domains->{$alias} = $ip_addr if $relay_domains->{$domain} ~~ $ip_addr;
+
+            if ($relay_domains->{$domain} ~~ $ip_addr){
+                push @{$alias_map->{$domain}}, $alias;
+                $relay_domains->{$alias} = $ip_addr;
+            }
         }
 
         $self->relay_domains($relay_domains);
     }
 
-    $self->relay_aliases($alias_href);
+    $self->alias_map($alias_map);
 
     return 1;
 }
