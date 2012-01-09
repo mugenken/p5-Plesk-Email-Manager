@@ -91,15 +91,22 @@ sub _map_relay_recipients {
     my @catch_alls = _flatten(@$catch_alls);
     my @smtp_overrides = keys %{ $self->config->{'Postfix: Domain-Smtp-Overrides'} };
     my @mailbox_exceptions = keys %{ $self->config->{'Postfix: Mailbox-Exceptions'} };
+    my $domain_structure = $self->domain_structure;
 
     for (@{$mailboxes}){
         my ($user, $domain) = @$_;
-        for (@catch_alls){
-            $user = '' if $domain eq $_;
+        if ($self->_in_domain_list($domain)){
+            for (@catch_alls){
+                $user = '' if $domain eq $_;
+                $domain_structure->{$domain}->{CatchAll} = 1;
+            }
+            my $address = $user . '@' . $domain;
+            $addresses->{$address} = 'OK';
+            push @{$domain_structure->{$domain}->{Mailboxes}}, $user if $user !~ '';
         }
-        my $address = $user . '@' . $domain;
-        $addresses->{$address} = 'OK';
     }
+
+    $self->domain_structure($domain_structure);
 
     for (@smtp_overrides){
         my $domain = '@' . $_;
@@ -196,21 +203,19 @@ sub _add_trandport_to_relay_domains {
     my ($self) = @_;
 
     my $relay_domains = $self->relay_domains;
+    my %domain_structure;
 
     for (keys %{$relay_domains}){
         # should be all smtp here. exceptions will be merged later
         $relay_domains->{$_} = 'smtp:' . $relay_domains->{$_};
-    }
-
-    $self->relay_domains($relay_domains);
-
-    my %domain_structure;
-    for (keys %{$self->relay_domains}){
         $domain_structure{$_} = {
             CatchAll => 0,
             MailBoxes => [],
         };
     }
+
+    $self->relay_domains($relay_domains);
+    $self->domain_structure({%domain_structure});
 
     return 1;
 }
