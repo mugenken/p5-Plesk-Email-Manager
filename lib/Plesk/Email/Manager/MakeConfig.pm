@@ -55,6 +55,7 @@ sub _get_servers {
 
     $self->servers({%servers});
 
+    say 'Servers';
     say Dumper $self->servers;
 
     return 1;
@@ -84,6 +85,7 @@ sub _fetch_mailboxes {
         # merge aliases with mailboxes
         push @$mailboxes, $_ for @$aliases;
 
+        say 'Mailboxes';
         say Dumper $mailboxes;
 
         $self->_map_relay_recipients($catch_alls, $mailboxes);
@@ -118,6 +120,7 @@ sub _map_relay_recipients {
         $addresses->{$_} = 'OK';
     }
 
+    say 'Addresses';
     say Dumper $addresses;
 
     $self->relay_recipients($addresses);
@@ -186,6 +189,7 @@ sub _map_relay_domains {
 
     $self->relay_domains($domains_resolved);
 
+    say 'Relay domains';
     say Dumper $self->relay_domains;
 
     return 1;
