@@ -102,7 +102,7 @@ sub _map_relay_recipients {
             }
             my $address = $user . '@' . $domain;
             $addresses->{$address} = 'OK';
-            push @{$domain_structure->{$domain}->{Mailboxes}}, $user if $user !~ '';
+            push @{$domain_structure->{$domain}->{MailBoxes}}, $user if $user;
         }
     }
 
