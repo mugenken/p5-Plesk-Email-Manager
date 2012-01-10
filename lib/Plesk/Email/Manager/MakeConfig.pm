@@ -196,10 +196,7 @@ sub _query {
 sub _map_relay_domains {
     my ($self, $domains, $domains_ips, $server_ip_addresses) = @_;
 
-    use Data::Dumper;
-    use feature 'say';
-    say $server_ip_addresses;
-
+    my @server_ip_addresses = _flatten(@$server_ip_addresses);
     my $domains_resolved = $self->relay_domains // {};
 
     $domains_ips = _aref_to_href($domains_ips);
@@ -208,7 +205,12 @@ sub _map_relay_domains {
         my $packed_ip = gethostbyname($_);
         if (defined $packed_ip){
             my $ip_addr = inet_ntoa($packed_ip);
-            $domains_resolved->{$_} = $ip_addr if $domains_ips->{$_} ~~ $ip_addr;
+
+            # check if resolved address is in servers ip addresses and matches
+            # domains ip address configured in Plesk
+            if ($domains_ips->{$_} ~~ $ip_addr && grep { $_ ~~ $ip_addr } @server_ip_addresses){
+                $domains_resolved->{$_} = $ip_addr;
+            }
         }
     }
 
