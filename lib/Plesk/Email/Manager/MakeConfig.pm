@@ -163,10 +163,11 @@ sub _fetch_domains {
         my $domains = $self->_query($dbh, $self->config->{Queries}->{domains});
         my $domain_aliases = $self->_query($dbh, $self->config->{Queries}->{domain_aliases});
         my $domains_ips = $self->_query($dbh, $self->config->{Queries}->{domains_ips});
+        my $server_ip_addresses = $self->_query($dbh, $self->config->{Queries}->{server_ip_addresses});
 
         $dbh->disconnect;
 
-        $self->_map_relay_domains($domains, $domains_ips);
+        $self->_map_relay_domains($domains, $domains_ips, $server_ip_addresses);
         $self->_map_aliases_to_domains($domain_aliases);
     }
 
@@ -193,7 +194,11 @@ sub _query {
 }
 
 sub _map_relay_domains {
-    my ($self, $domains, $domains_ips) = @_;
+    my ($self, $domains, $domains_ips, $server_ip_addresses) = @_;
+
+    use Data::Dumper;
+    use feature 'say';
+    say $server_ip_addresses;
 
     my $domains_resolved = $self->relay_domains // {};
 
