@@ -1,10 +1,6 @@
 *.swp
 *.conf
-
 files/domains.pkl
-
 files/domains.yml
-
 test_pickle.pl
-
 test_pickle.py

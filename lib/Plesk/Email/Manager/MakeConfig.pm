@@ -38,7 +38,7 @@ sub run {
 
     $self->_generate_postfix_config;
     $self->_postmap_and_reload;
-    $self->_generate_pickle_file;
+    $self->_generate_pickle_file if $self->config->{ConfigFiles}->{pickle_file};
 
     return 1;
 }
@@ -333,9 +333,18 @@ sub _postmap_and_reload {
     my $relay_domains = $self->config->{ConfigFiles}->{relay_domains};
     my $relay_recipient_maps = $self->config->{ConfigFiles}->{relay_recipient_maps};
 
-    system "postmap $relay_domains";
-    system "postmap $relay_recipient_maps";
-    #system '/etc/init.d/postfix reload';
+    my $postmap = '/usr/sbin/postmap';
+    my $postfix_init = '/etc/init.d/postfix';
+    if ($self->config->{Executables}->{postmap}){
+        $postmap = $self->config->{Executables}->{postmap}
+    }
+    if ($self->config->{Executables}->{postfix_init}){
+        $postmap = $self->config->{Executables}->{postfix_init}
+    }
+
+    system $postmap, $relay_domains;
+    system $postmap, $relay_recipient_maps;
+    #system $postfix_init, 'reload';
 
     return 1;
 }
