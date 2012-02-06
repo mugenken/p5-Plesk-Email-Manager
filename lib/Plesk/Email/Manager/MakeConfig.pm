@@ -339,7 +339,7 @@ sub _postmap_and_reload {
         $postmap = $self->config->{Executables}->{postmap}
     }
     if ($self->config->{Executables}->{postfix_init}){
-        $postmap = $self->config->{Executables}->{postfix_init}
+        $postfix_init = $self->config->{Executables}->{postfix_init}
     }
 
     system $postmap, $relay_domains;
