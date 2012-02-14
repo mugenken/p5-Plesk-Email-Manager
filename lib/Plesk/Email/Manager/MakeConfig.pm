@@ -134,9 +134,15 @@ sub _merge_alias_map {
 
     for my $domain (keys %$alias_map){
         for my $alias (@{$alias_map->{$domain}}){
-            for my $mailbox (@{$domain_structure->{$domain}->{MailBoxes}}){
-                my $address = $mailbox . '@' . $alias;
+            if ($domain_structure->{$domain}->{CatchAll}){
+                my $address = '@' . $alias;
                 $relay_recipients->{$address} = 'OK';
+            }
+            else {
+                for my $mailbox (@{$domain_structure->{$domain}->{MailBoxes}}){
+                    my $address = $mailbox . '@' . $alias;
+                    $relay_recipients->{$address} = 'OK';
+                }
             }
         }
     }
