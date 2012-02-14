@@ -72,7 +72,8 @@ sub _fetch_mailboxes {
         my $port     = 3306;
 
         my $dsn = "$base_dsn:$database:$hostname:$port";
-        my $dbh = DBI->connect($dsn, $username, $password) or $self->_notify($!, 'deadly');
+        my $dbh = DBI->connect($dsn, $username, $password, {RaiseError => 1})
+            or $self->_notify($!, 'deadly');
 
         my $mailboxes = $self->_query($dbh, $self->config->{Queries}->{mailboxes});
         my $aliases   = $self->_query($dbh, $self->config->{Queries}->{mail_aliases});

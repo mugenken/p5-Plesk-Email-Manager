@@ -39,6 +39,8 @@ my $build = Module::Build->new(
         'multidimensional' => 0,
         'bareword::filehandles' => 0,
         'Python::Serialise::Pickle' => 0,
+        'Email::Simple' => 0,
+        'Email::Sender::Simple' => 0,
     },
 
     script_files => [@script_files],
