@@ -79,7 +79,7 @@ sub _fetch_mailboxes {
         }
         catch {
             $self->_notify($_, 'deadly');
-        }
+        };
 
         my $mailboxes = $self->_query($dbh, $self->config->{Queries}->{mailboxes});
         my $aliases   = $self->_query($dbh, $self->config->{Queries}->{mail_aliases});
@@ -180,7 +180,7 @@ sub _fetch_domains {
         }
         catch {
             $self->_notify($_, 'deadly');
-        }
+        };
 
         my $domains = $self->_query($dbh, $self->config->{Queries}->{domains});
         my $domain_aliases = $self->_query($dbh, $self->config->{Queries}->{domain_aliases});
