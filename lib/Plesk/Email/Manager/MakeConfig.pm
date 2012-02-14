@@ -9,6 +9,9 @@ use Socket;
 use File::Copy;
 use DBI;
 use Python::Serialise::Pickle;
+use Email::Sender::Simple 'sendmail';
+use Email::Simple;
+use Email::Simple::Creator;
 
 has configfile => ( is => 'rw' );
 has config => ( is => 'rw' );
@@ -69,7 +72,7 @@ sub _fetch_mailboxes {
         my $port     = 3306;
 
         my $dsn = "$base_dsn:$database:$hostname:$port";
-        my $dbh = DBI->connect($dsn, $username, $password) or die $!;
+        my $dbh = DBI->connect($dsn, $username, $password) or $self->_notify($!, 'deadly');
 
         my $mailboxes = $self->_query($dbh, $self->config->{Queries}->{mailboxes});
         my $aliases   = $self->_query($dbh, $self->config->{Queries}->{mail_aliases});
@@ -393,4 +396,22 @@ sub _aref_to_href {
     return $href;
 }
 
+sub _notify {
+    my ($self, $message, $deadly) = @_;
+
+    my $email = Email::Simple->create(
+        header => [
+            To      => $self->config->{Notify}->{notify_address},
+            From    => $self->config->{Notify}->{from_address},
+            Subject => $self->config->{Notify}->{subject},
+        ],
+        body => $message,
+    );
+
+    sendmail($email);
+
+    exit 1 if $deadly;
+
+    return 1;
+}
 
