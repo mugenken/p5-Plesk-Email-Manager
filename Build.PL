@@ -41,6 +41,7 @@ my $build = Module::Build->new(
         'Python::Serialise::Pickle' => 0,
         'Email::Simple' => 0,
         'Email::Sender::Simple' => 0,
+        'Try::Tiny' => 0,
     },
 
     script_files => [@script_files],

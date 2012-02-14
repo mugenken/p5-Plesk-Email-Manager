@@ -4,6 +4,7 @@ use Moo;
 use 5.010;
 use warnings;
 use autodie;
+use Try::Tiny;
 use Config::Auto;
 use Socket;
 use File::Copy;
@@ -72,8 +73,13 @@ sub _fetch_mailboxes {
         my $port     = 3306;
 
         my $dsn = "$base_dsn:$database:$hostname:$port";
-        my $dbh = DBI->connect($dsn, $username, $password, {RaiseError => 1})
-            or $self->_notify($!, 'deadly');
+        my $dbh;
+        try {
+            $dbh = DBI->connect($dsn, $username, $password, {RaiseError => 1});
+        }
+        catch {
+            $self->_notify($_, 'deadly');
+        }
 
         my $mailboxes = $self->_query($dbh, $self->config->{Queries}->{mailboxes});
         my $aliases   = $self->_query($dbh, $self->config->{Queries}->{mail_aliases});
@@ -168,7 +174,13 @@ sub _fetch_domains {
         my $port     = 3306;
 
         my $dsn = "$base_dsn:$database:$hostname:$port";
-        my $dbh = DBI->connect($dsn, $username, $password) or die $!;
+        my $dbh;
+        try {
+            $dbh = DBI->connect($dsn, $username, $password, {RaiseError => 1});
+        }
+        catch {
+            $self->_notify($_, 'deadly');
+        }
 
         my $domains = $self->_query($dbh, $self->config->{Queries}->{domains});
         my $domain_aliases = $self->_query($dbh, $self->config->{Queries}->{domain_aliases});
